@@ -15,6 +15,7 @@ class UserCreationTests(TestCase):
         self.assertTrue(user.is_active)
         self.assertFalse(user.is_staff)
         self.assertFalse(user.is_superuser)
+        self.assertFalse(user.is_confirmed)
 
         with self.assertRaises(IntegrityError):
             self.user_model.objects.create_user("test@example.com", "67890")
@@ -34,6 +35,7 @@ class UserCreationTests(TestCase):
         self.assertTrue(user.is_active)
         self.assertTrue(user.is_staff)
         self.assertTrue(user.is_superuser)
+        self.assertTrue(user.is_confirmed)
 
         with self.assertRaises(IntegrityError):
             self.user_model.objects.create_superuser("test@example.com", "67890")

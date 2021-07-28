@@ -1,6 +1,7 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
+from django.db.models.deletion import CASCADE
 from django.utils import timezone
 
 
@@ -17,6 +18,7 @@ class UserManager(BaseUserManager):
     def create_superuser(self, email, password, **kwargs):
         kwargs.setdefault("is_staff", True)
         kwargs.setdefault("is_superuser", True)
+        kwargs.setdefault("is_confirmed", True)
 
         if kwargs.get("is_staff") is not True or kwargs.get("is_superuser") is not True:
             raise ValueError("Invalid values for is_staff or is_superuser")
@@ -32,3 +34,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = "email"
     objects = UserManager()
+
+
+class EmailConfirmationToken(models.Model):
+    user = models.OneToOneField(User, on_delete=CASCADE, primary_key=True)
+    token = models.CharField(max_length=100)
