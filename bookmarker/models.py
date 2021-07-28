@@ -37,5 +37,24 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class EmailConfirmationToken(models.Model):
-    user = models.OneToOneField(User, on_delete=CASCADE, primary_key=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
     token = models.CharField(max_length=100)
+
+
+class List(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="lists")
+    name = models.CharField(max_length=300)
+
+    def delete_related_bookmarks(self):
+        self.bookmarks.all().delete()
+
+
+class Bookmark(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="bookmarks")
+    name = models.CharField(max_length=300)
+    url = models.URLField(max_length=2000)
+    unread = models.BooleanField(default=True)
+    datetime_created = models.DateTimeField(default=timezone.now)
+    list = models.ForeignKey(
+        List, null=True, on_delete=models.SET_NULL, related_name="bookmarks"
+    )
