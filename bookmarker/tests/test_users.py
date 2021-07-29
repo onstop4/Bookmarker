@@ -11,7 +11,7 @@ class UserCreationTests(TestCase):
 
     def test_create_user(self):
         user = self.user_model.objects.create_user("test@example.com", "12345")
-        self.assertEqual("test@example.com", user.email)
+        self.assertEqual(user.email, "test@example.com")
         self.assertTrue(user.is_active)
         self.assertFalse(user.is_staff)
         self.assertFalse(user.is_superuser)
@@ -31,7 +31,7 @@ class UserCreationTests(TestCase):
 
     def test_create_superuser(self):
         user = self.user_model.objects.create_superuser("test@example.com", "12345")
-        self.assertEqual("test@example.com", user.email)
+        self.assertEqual(user.email, "test@example.com")
         self.assertTrue(user.is_active)
         self.assertTrue(user.is_staff)
         self.assertTrue(user.is_superuser)

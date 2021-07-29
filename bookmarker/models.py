@@ -48,6 +48,9 @@ class List(models.Model):
     def delete_related_bookmarks(self):
         self.bookmarks.all().delete()
 
+    def __str__(self):
+        return self.name
+
 
 class Bookmark(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="bookmarks")
@@ -58,3 +61,6 @@ class Bookmark(models.Model):
     list = models.ForeignKey(
         List, null=True, on_delete=models.SET_NULL, related_name="bookmarks"
     )
+
+    def __str__(self):
+        return self.name
