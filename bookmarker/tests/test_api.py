@@ -230,6 +230,55 @@ class APIGetTests(APITestCase):
         self.assertNotIn({"id": list1_id, "name": "List1"}, response.data)
         self.assertNotIn({"id": list2_id, "name": "List2"}, response.data)
 
+    def test_get_filtered_by_list(self):
+        list1 = List.objects.create(name="List1", user=self.user)
+        Bookmark.objects.create(
+            name="Bookmark1", url="http://example.com", user=self.user, list=list1
+        )
+        Bookmark.objects.create(
+            name="Bookmark2", url="http://example.com", user=self.user
+        )
+
+        response = self.client.get(f"/bookmarks/?list={list1.id}")
+
+        self.assertContains(response, "Bookmark1")
+        self.assertNotContains(response, "Bookmark2")
+
+        self.client.force_login(self.user2)
+        response = self.client.get(f"/bookmarks/?list={list1.id}")
+
+        self.assertNotContains(response, "Bookmark1")
+        self.assertNotContains(response, "Bookmark2")
+
+    def test_get_filtered_by_unread(self):
+        Bookmark.objects.create(
+            name="Bookmark1", url="http://example.com", user=self.user
+        )
+        Bookmark.objects.create(
+            name="Bookmark2", url="http://example.com", user=self.user, unread=False
+        )
+
+        response = self.client.get("/bookmarks/?unread=1")
+
+        self.assertContains(response, "Bookmark1")
+        self.assertNotContains(response, "Bookmark2")
+
+        response = self.client.get("/bookmarks/?unread=0")
+
+        self.assertNotContains(response, "Bookmark1")
+        self.assertContains(response, "Bookmark2")
+
+        self.client.force_login(self.user2)
+        response = self.client.get("/bookmarks/?unread=1")
+
+        self.assertNotContains(response, "Bookmark1")
+        self.assertNotContains(response, "Bookmark2")
+
+        response = self.client.get("/bookmarks/?unread=0")
+
+        self.assertNotContains(response, "Bookmark1")
+        self.assertNotContains(response, "Bookmark2")
+
 
 class DifferentUsersLists(APITestCase):
     def test_lists_of_different_users(self):

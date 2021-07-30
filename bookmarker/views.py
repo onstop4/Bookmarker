@@ -24,6 +24,18 @@ class BookmarkViewSet(ViewSet):
     queryset = Bookmark.objects.all()
     serializer_class = BookmarkSerializer
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        requested_list = self.request.query_params.get("list")
+        requested_unread = self.request.query_params.get("unread")
+        if requested_list is not None:
+            queryset = queryset.filter(list=requested_list)
+        if requested_unread == "1":
+            queryset = queryset.filter(unread=True)
+        elif requested_unread == "0":
+            queryset = queryset.filter(unread=False)
+        return queryset
+
 
 class ListViewSet(ViewSet):
     queryset = List.objects.all()
