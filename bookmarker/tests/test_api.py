@@ -4,7 +4,7 @@ from rest_framework.test import APITestCase
 from bookmarker.models import Bookmark, List, User
 
 
-class APICreateAlterTests(APITestCase):
+class CreateModifyTests(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             email="test1@example.com", password="12345"
@@ -32,7 +32,7 @@ class APICreateAlterTests(APITestCase):
         self.assertTrue(query.filter(name="Bookmark1").exists())
         self.assertTrue(query.filter(name="Bookmark2").exists())
 
-    def test_bookmark_alter(self):
+    def test_bookmark_modify(self):
         response = self.client.post(
             "/bookmarks/",
             {"name": "Bookmark1", "url": "http://example.com"},
@@ -82,7 +82,7 @@ class APICreateAlterTests(APITestCase):
         self.assertTrue(query.filter(name="List1").exists())
         self.assertTrue(query.filter(name="List2").exists())
 
-    def test_list_alter(self):
+    def test_list_modify(self):
         response = self.client.post("/lists/", {"name": "List1"}, format="json")
         list_1 = response.data["id"]
         response = self.client.post("/lists/", {"name": "List2"}, format="json")
@@ -104,12 +104,12 @@ class APICreateAlterTests(APITestCase):
         self.assertTrue(query.filter(name="List4").exists())
 
         self.client.force_login(self.user2)
-        response = self.client.patch(f"/bookmarks/{list_1}/", {"name": "Bad List"})
+        response = self.client.patch(f"/lists/{list_1}/", {"name": "Bad List"})
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertNotEqual(query.get(id=list_1).name, "Bad List")
 
 
-class APIGetTests(APITestCase):
+class GetTests(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             email="test1@example.com", password="12345"
@@ -282,6 +282,10 @@ class APIGetTests(APITestCase):
 
 class DifferentUsersLists(APITestCase):
     def test_lists_of_different_users(self):
+        """
+        Tests to verify that a bookmark associated with one user cannot become part of
+        a list of another user.
+        """
         user = User.objects.create_user(email="test1@example.com", password="12345")
         user2 = User.objects.create_user(email="test2@example.com", password="12345")
         list1_id = List.objects.create(name="List1", user=user).id
@@ -309,3 +313,77 @@ class DifferentUsersLists(APITestCase):
             format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class ForbiddenRequestsTests(APITestCase):
+    """
+    This tests that the API will return HTTP 403 when user is not logged in.
+    """
+
+    def test_request_nothing_exists_get(self):
+        """
+        Tests for HTTP 403 when there are no bookmarks or lists.
+        """
+        response = self.client.get("/bookmarks/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        response = self.client.get("/bookmarks/1/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        response = self.client.get("/lists/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        response = self.client.get("/lists/1/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_request_get_existing(self):
+        """
+        Tests for HTTP 403 when there are bookmarks or lists.
+        """
+        user = User.objects.create_user(email="test1@example.com", password="12345")
+        bookmark_id = Bookmark.objects.create(
+            name="Bookmark1", url="http://example.com", user=user
+        ).id
+        list_id = List.objects.create(name="List1", user=user).id
+
+        response = self.client.get("/bookmarks/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        response = self.client.get(f"/bookmarks/{bookmark_id}/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        response = self.client.get("/lists/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        response = self.client.get(f"/lists/{list_id}/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_request_create(self):
+        """
+        Tests for HTTP 403 when trying to create bookmarks or lists.
+        """
+        response = self.client.post(
+            "/bookmarks/",
+            {"name": "Bookmark1", "url": "http://example.com"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        response = self.client.post(
+            "/lists/", {"name": "List1", "url": "http://example.com"}, format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_request_modify_existing(self):
+        """
+        Tests for HTTP 403 when trying to modify existing bookmarks or lists.
+        """
+        user = User.objects.create_user(email="test1@example.com", password="12345")
+        bookmark_id = Bookmark.objects.create(
+            name="Bookmark1", url="http://example.com", user=user
+        ).id
+        list_id = List.objects.create(name="List1", user=user).id
+
+        response = self.client.patch(
+            f"/bookmarks/{bookmark_id}/", {"name": "Bookmark2"}, format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        response = self.client.patch(
+            f"/lists/{list_id}/", {"name": "List2"}, format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        response = self.client.patch(f"/bookmarks/{bookmark_id}/", {"list": list_id})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

@@ -11,7 +11,9 @@ class IsOwner(permissions.BasePermission):
 
 
 class ViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsOwner]
+    # User must be logged in to use the API Viewsets. If the user is trying to modify
+    # an existing object, they must also be associated with that object.
+    permission_classes = [permissions.IsAuthenticated, IsOwner]
 
     def get_queryset(self):
         return super().get_queryset().filter(user=self.request.user)
