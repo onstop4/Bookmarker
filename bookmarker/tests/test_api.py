@@ -1,3 +1,8 @@
+import json
+import re
+from django.contrib.auth import get_user
+from django.core import mail
+from django.test.testcases import TestCase
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -7,10 +12,10 @@ from bookmarker.models import Bookmark, List, User
 class CreateModifyTests(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(
-            email="test1@example.com", password="12345"
+            email="test1@example.com", password="12345", is_confirmed=True
         )
         self.user2 = User.objects.create_user(
-            email="test2@example.com", password="12345"
+            email="test2@example.com", password="12345", is_confirmed=True
         )
         self.client.force_login(self.user)
 
@@ -112,10 +117,10 @@ class CreateModifyTests(APITestCase):
 class GetTests(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(
-            email="test1@example.com", password="12345"
+            email="test1@example.com", password="12345", is_confirmed=True
         )
         self.user2 = User.objects.create_user(
-            email="test2@example.com", password="12345"
+            email="test2@example.com", password="12345", is_confirmed=True
         )
         self.client.force_login(self.user)
 
@@ -286,8 +291,12 @@ class DifferentUsersLists(APITestCase):
         Tests to verify that a bookmark associated with one user cannot become part of
         a list of another user.
         """
-        user = User.objects.create_user(email="test1@example.com", password="12345")
-        user2 = User.objects.create_user(email="test2@example.com", password="12345")
+        user = User.objects.create_user(
+            email="test1@example.com", password="12345", is_confirmed=True
+        )
+        user2 = User.objects.create_user(
+            email="test2@example.com", password="12345", is_confirmed=True
+        )
         list1_id = List.objects.create(name="List1", user=user).id
         list2_id = List.objects.create(name="List2", user=user2).id
 
@@ -337,7 +346,9 @@ class ForbiddenRequestsTests(APITestCase):
         """
         Tests for HTTP 403 when there are bookmarks or lists.
         """
-        user = User.objects.create_user(email="test1@example.com", password="12345")
+        user = User.objects.create_user(
+            email="test1@example.com", password="12345", is_confirmed=True
+        )
         bookmark_id = Bookmark.objects.create(
             name="Bookmark1", url="http://example.com", user=user
         ).id
@@ -371,7 +382,9 @@ class ForbiddenRequestsTests(APITestCase):
         """
         Tests for HTTP 403 when trying to modify existing bookmarks or lists.
         """
-        user = User.objects.create_user(email="test1@example.com", password="12345")
+        user = User.objects.create_user(
+            email="test1@example.com", password="12345", is_confirmed=True
+        )
         bookmark_id = Bookmark.objects.create(
             name="Bookmark1", url="http://example.com", user=user
         ).id
@@ -388,4 +401,121 @@ class ForbiddenRequestsTests(APITestCase):
         response = self.client.patch(
             f"/api/bookmarks/{bookmark_id}/", {"list": list_id}
         )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class UserManagementTests(TestCase):
+    def setUp(self):
+        self.client.get("/api/set-cookie/")
+
+    def test_login(self):
+        User.objects.create_user(email="test@example.com", password="12345")
+        response = self.client.post(
+            "/api/login/",
+            {"email": "test@example.com", "password": "12345"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user = get_user(self.client)
+        self.assertTrue(user.is_authenticated)
+
+    def test_bad_login(self):
+        User.objects.create_user(email="test@example.com", password="12345")
+        response = self.client.post(
+            "/api/login/",
+            {"email": "test@example.com", "password": "67890"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response = self.client.post(
+            "/api/login/",
+            {"email": "nothing@example.com", "password": "12345"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_register(self):
+        response = self.client.post(
+            "/api/register/",
+            {"email": "test@example.com", "password": "12345"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(mail.outbox), 1)
+        message_body = mail.outbox[0].body
+
+        regex = r"/confirm/(\d+)/([A-Za-z\d]+)/"
+        match = re.search(regex, message_body)
+        user_id, token_str = match.groups()
+        response = self.client.get(f"/confirm/{user_id}/{token_str}/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user = User.objects.get(id=user_id)
+        self.assertTrue(user.is_confirmed)
+
+    def test_bad_confirmation(self):
+        response = self.client.post(
+            "/api/register/",
+            {"email": "test@example.com", "password": "12345"},
+            format="json",
+        )
+        user = User.objects.first()
+        token = user.email_confirm_token
+
+        response = self.client.get(f"/confirm/{user.id}/12345/")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        response = self.client.get(f"/confirm/12345/{token}/")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        response = self.client.get(f"/confirm/{user.id}/{token}/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_resend_confirmation(self):
+        response = self.client.post(
+            "/api/register/",
+            {"email": "test@example.com", "password": "12345"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(mail.outbox), 1)
+        message1_body = mail.outbox[0].body
+
+        response = self.client.post("/api/resend-confirmation/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(mail.outbox), 2)
+        message2_body = mail.outbox[1].body
+        self.assertEqual(message1_body, message2_body)
+
+    def test_bad_resend_confirmation(self):
+        response = self.client.post("/api/resend-confirmation/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_logout(self):
+        user = User.objects.create_user(email="test@example.com", password="12345")
+        self.client.force_login(user)
+
+        response = self.client.post("/api/logout/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        potential_user = get_user(self.client)
+        self.assertFalse(potential_user.is_authenticated)
+
+    def test_get_confirmed_status(self):
+        user = User.objects.create_user(email="test@example.com", password="12345")
+        self.client.force_login(user)
+
+        response = self.client.get("/api/confirmed-status/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(json.loads(response.content), {"detail": False})
+
+        user.is_confirmed = True
+        user.save()
+
+        response = self.client.get("/api/confirmed-status/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(json.loads(response.content), {"detail": True})
+
+    def test_bad_get_confirmed_status(self):
+        response = self.client.get("/api/confirmed-status/")
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

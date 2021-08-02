@@ -37,8 +37,16 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class EmailConfirmationToken(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        primary_key=True,
+        related_name="email_confirm_token",
+    )
     token = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.token
 
 
 class List(models.Model):

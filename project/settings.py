@@ -137,3 +137,15 @@ STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesSto
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "bookmarker.User"
+
+EMAIL_HOST = config("EMAIL_HOST", default="localhost")
+
+EMAIL_PORT = config("EMAIL_PORT", cast=int, default=25)
+
+EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
+
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
+
+EMAIL_USE_TLS = config("EMAIL_USE_TLS", cast=bool, default=False)
+
+EMAIL_USE_SSL = config("EMAIL_USE_SSL", cast=bool, default=False)
