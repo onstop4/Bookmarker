@@ -465,7 +465,8 @@ class UserManagementTests(TestCase):
         match = re.search(regex, message_body)
         user_id, token_str = match.groups()
         response = self.client.get(f"/confirm/{user_id}/{token_str}/")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(response.headers["Location"], "/confirmed/")
         user = User.objects.get(id=user_id)
         self.assertTrue(user.is_confirmed)
 
@@ -485,7 +486,8 @@ class UserManagementTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
         response = self.client.get(f"/confirm/{user.id}/{token}/")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(response.headers["Location"], "/confirmed/")
 
     def test_resend_confirmation(self):
         response = self.client.post(

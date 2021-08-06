@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.validators import validate_email
 from django.http import Http404, HttpResponse, JsonResponse
+from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.crypto import get_random_string
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -149,8 +150,7 @@ def confirm_user_view(request, user_id, token_str):
         raise Http404()
     user.is_confirmed = True
     user.save()
-    login(request, user)
-    return HttpResponse("Email confirmed.")
+    return redirect("/confirmed/")
 
 
 @require_GET
