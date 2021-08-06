@@ -404,6 +404,23 @@ class ForbiddenRequestsTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
+class UserInfoTests(APITestCase):
+    def test_get_user_info(self):
+        user = User.objects.create_user(email="test@example.com", password="12345")
+        self.client.force_login(user)
+
+        response = self.client.get("/api/user/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data,
+            {"id": user.id, "email": "test@example.com", "is_confirmed": False},
+        )
+
+    def test_bad_get_user_info(self):
+        response = self.client.get("/api/user/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
 class UserManagementTests(TestCase):
     def setUp(self):
         self.client.get("/api/set-cookie/")

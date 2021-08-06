@@ -9,9 +9,11 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
 from rest_framework import permissions
 from rest_framework import viewsets
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from bookmarker.models import Bookmark, EmailConfirmationToken, List, User
-from bookmarker.serializers import BookmarkSerializer, ListSerializer
+from bookmarker.serializers import BookmarkSerializer, ListSerializer, UserSerializer
 
 
 class IsConfirmed(permissions.BasePermission):
@@ -58,6 +60,15 @@ class BookmarkViewSet(ViewSet):
 class ListViewSet(ViewSet):
     queryset = List.objects.all()
     serializer_class = ListSerializer
+
+
+class UserView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, format=None):
+        # pylint: disable=redefined-builtin, unused-argument
+        user_serialized = UserSerializer(request.user)
+        return Response(user_serialized.data)
 
 
 @ensure_csrf_cookie

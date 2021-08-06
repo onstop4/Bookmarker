@@ -13,6 +13,7 @@ urlpatterns = [
         views.confirm_user_view,
         name="confirm-user",
     ),
+    path("api/user/", views.UserView.as_view()),
     path("api/resend-confirmation/", views.resend_user_confirmation_view),
     path("api/set-cookie/", views.set_csrf_cookie),
     path("api/login/", views.login_user_view),

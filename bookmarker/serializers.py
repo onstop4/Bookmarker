@@ -1,6 +1,12 @@
 from rest_framework import serializers
 
-from bookmarker.models import Bookmark, List
+from bookmarker.models import Bookmark, List, User
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "email", "is_confirmed"]
 
 
 class BookmarkSerializer(serializers.ModelSerializer):
