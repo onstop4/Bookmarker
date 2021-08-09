@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.utils.crypto import get_random_string
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
+from django.views.generic import TemplateView
 from rest_framework import permissions
 from rest_framework import viewsets
 from rest_framework.decorators import action
@@ -127,7 +128,7 @@ def logout_user_view(request):
 
 
 def send_user_confirmation(request, user):
-    host = request.get_host()
+    host = request.get_host().split(":")[0]
     token = EmailConfirmationToken.objects.get_or_create(
         user=user, defaults={"token": get_random_string(length=100)}
     )[0]
@@ -140,6 +141,7 @@ def send_user_confirmation(request, user):
         message_body,
         f"noreply@{host}",
         [user.email],
+        fail_silently=True,
     )
 
 
@@ -174,3 +176,7 @@ def get_user_confirmed_status(request):
     return JsonResponse(
         {"detail": "Authentication credentials were not provided."}, status=403
     )
+
+
+class MainView(TemplateView):
+    template_name = "bookmarker/index.html"

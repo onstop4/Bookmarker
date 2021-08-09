@@ -21,4 +21,6 @@ urlpatterns = [
     path("api/register/", views.register_user_view),
     path("api/confirmed-status/", views.get_user_confirmed_status),
     path("api/", include(router.urls)),
+    path("", views.MainView.as_view(), name="index"),
+    path(r"<path:resource>", views.MainView.as_view(), name="for_app"),
 ]
