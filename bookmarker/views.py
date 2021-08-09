@@ -2,7 +2,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.validators import validate_email
-from django.http import Http404, HttpResponse, JsonResponse
+from django.db import IntegrityError
+from django.http import Http404, JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.crypto import get_random_string
@@ -100,6 +101,10 @@ def register_user_view(request):
     except (ValidationError, ValueError) as e:
         return JsonResponse(
             {"detail": "Invalid email or password", "error": str(e)}, status=400
+        )
+    except IntegrityError:
+        return JsonResponse(
+            {"detail": "An account with this email already exists"}, status=400
         )
     login(request, user)
     send_user_confirmation(request, user)

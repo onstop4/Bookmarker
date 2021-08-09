@@ -470,6 +470,19 @@ class UserManagementTests(TestCase):
         user = User.objects.get(id=user_id)
         self.assertTrue(user.is_confirmed)
 
+    def test_bad_register_preexisting_email(self):
+        User.objects.create(email="test@example.com", password="12345")
+
+        response = self.client.post(
+            "/api/register/",
+            {"email": "test@example.com", "password": "12345"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(
+            "An account with this email already exists", str(response.content)
+        )
+
     def test_bad_confirmation(self):
         response = self.client.post(
             "/api/register/",
