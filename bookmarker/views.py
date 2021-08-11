@@ -4,14 +4,16 @@ from django.core.mail import send_mail
 from django.core.validators import validate_email
 from django.db import IntegrityError
 from django.http import Http404, JsonResponse
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.crypto import get_random_string
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
 from rest_framework import permissions
 from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework import status
 from rest_framework.views import APIView
 
 from bookmarker.models import Bookmark, EmailConfirmationToken, List, User
@@ -62,6 +64,13 @@ class BookmarkViewSet(ViewSet):
 class ListViewSet(ViewSet):
     queryset = List.objects.all()
     serializer_class = ListSerializer
+
+    @action(detail=True, methods=["delete"], url_path="include-related")
+    def delete_list_and_bookmarks(self, request, pk):
+        requested_list = get_object_or_404(self.get_queryset(), id=pk)
+        requested_list.delete_related_bookmarks()
+        requested_list.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class UserView(APIView):

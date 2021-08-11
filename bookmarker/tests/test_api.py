@@ -9,7 +9,7 @@ from rest_framework.test import APITestCase
 from bookmarker.models import Bookmark, List, User
 
 
-class CreateModifyTests(APITestCase):
+class CreateModifyDeleteTests(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             email="test1@example.com", password="12345", is_confirmed=True
@@ -112,6 +112,40 @@ class CreateModifyTests(APITestCase):
         response = self.client.patch(f"/api/lists/{list_1}/", {"name": "Bad List"})
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertNotEqual(query.get(id=list_1).name, "Bad List")
+
+    def test_list_delete_keep_bookmarks(self):
+        response = self.client.post("/api/lists/", {"name": "List1"}, format="json")
+        list_id = response.data["id"]
+        response = self.client.post(
+            "/api/bookmarks/",
+            {"name": "Bookmark1", "url": "http://example.com", "list": list_id},
+            format="json",
+        )
+        bookmark_id = response.data["id"]
+
+        response = self.client.delete(f"/api/lists/{list_id}/")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        self.assertFalse(List.objects.filter(id=list_id).exists())
+        bookmark = Bookmark.objects.filter(id=bookmark_id).first()
+        self.assertIsNotNone(bookmark)
+        self.assertIsNone(bookmark.list)
+
+    def test_list_delete_and_related_bookmarks(self):
+        response = self.client.post("/api/lists/", {"name": "List1"}, format="json")
+        list_id = response.data["id"]
+        response = self.client.post(
+            "/api/bookmarks/",
+            {"name": "Bookmark1", "url": "http://example.com", "list": list_id},
+            format="json",
+        )
+        bookmark_id = response.data["id"]
+
+        response = self.client.delete(f"/api/lists/{list_id}/include-related/")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        self.assertFalse(List.objects.filter(id=list_id).exists())
+        self.assertFalse(Bookmark.objects.filter(id=bookmark_id).exists())
 
 
 class GetTests(APITestCase):
