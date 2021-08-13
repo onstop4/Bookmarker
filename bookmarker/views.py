@@ -10,11 +10,13 @@ from django.utils.crypto import get_random_string
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
 from django.views.generic import TemplateView
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
 from rest_framework import permissions
+from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework import status
 from rest_framework.views import APIView
 
 from bookmarker.models import Bookmark, EmailConfirmationToken, List, User
@@ -38,6 +40,12 @@ class ViewSet(viewsets.ModelViewSet):
     # an existing object, they must also be associated with that object.
     permission_classes = [IsConfirmed, IsOwner]
 
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,
+    ]
+
     def get_queryset(self):
         return super().get_queryset().filter(user=self.request.user)
 
@@ -48,23 +56,18 @@ class ViewSet(viewsets.ModelViewSet):
 class BookmarkViewSet(ViewSet):
     queryset = Bookmark.objects.all()
     serializer_class = BookmarkSerializer
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        requested_list = self.request.query_params.get("list")
-        requested_unread = self.request.query_params.get("unread")
-        if requested_list is not None:
-            queryset = queryset.filter(list=requested_list)
-        if requested_unread == "1":
-            queryset = queryset.filter(unread=True)
-        elif requested_unread == "0":
-            queryset = queryset.filter(unread=False)
-        return queryset
+    filterset_fields = ["unread", "list"]
+    search_fields = ["name", "url"]
+    ordering_fields = ["name", "url"]
+    ordering = ["name"]
 
 
 class ListViewSet(ViewSet):
     queryset = List.objects.all()
     serializer_class = ListSerializer
+    filterset_fields = []
+    ordering_fields = ["name"]
+    ordering = ["name"]
 
     @action(detail=True, methods=["delete"], url_path="include-related")
     def delete_list_and_bookmarks(self, request, pk):

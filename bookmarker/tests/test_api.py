@@ -269,7 +269,7 @@ class GetTests(APITestCase):
         self.assertNotIn({"id": list1_id, "name": "List1"}, response.data)
         self.assertNotIn({"id": list2_id, "name": "List2"}, response.data)
 
-    def test_get_filtered_by_list(self):
+    def test_get_bookmarks_filtered_by_list(self):
         list1 = List.objects.create(name="List1", user=self.user)
         Bookmark.objects.create(
             name="Bookmark1", url="http://example.com", user=self.user, list=list1
@@ -289,7 +289,7 @@ class GetTests(APITestCase):
         self.assertNotContains(response, "Bookmark1")
         self.assertNotContains(response, "Bookmark2")
 
-    def test_get_filtered_by_unread(self):
+    def test_get_bookmarks_filtered_by_unread(self):
         Bookmark.objects.create(
             name="Bookmark1", url="http://example.com", user=self.user
         )
@@ -297,12 +297,12 @@ class GetTests(APITestCase):
             name="Bookmark2", url="http://example.com", user=self.user, unread=False
         )
 
-        response = self.client.get("/api/bookmarks/?unread=1")
+        response = self.client.get("/api/bookmarks/?unread=true")
 
         self.assertContains(response, "Bookmark1")
         self.assertNotContains(response, "Bookmark2")
 
-        response = self.client.get("/api/bookmarks/?unread=0")
+        response = self.client.get("/api/bookmarks/?unread=false")
 
         self.assertNotContains(response, "Bookmark1")
         self.assertContains(response, "Bookmark2")
@@ -317,6 +317,80 @@ class GetTests(APITestCase):
 
         self.assertNotContains(response, "Bookmark1")
         self.assertNotContains(response, "Bookmark2")
+
+    def test_get_bookmarks_ordered_by_name(self):
+        Bookmark.objects.create(
+            name="Bookmark1", url="http://example.com", user=self.user
+        )
+        Bookmark.objects.create(
+            name="Bookmark2", url="http://example.com", user=self.user
+        )
+
+        response = self.client.get("/api/bookmarks/?ordering=name")
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data[0]["name"], "Bookmark1")
+        self.assertEqual(response.data[1]["name"], "Bookmark2")
+
+        response = self.client.get("/api/bookmarks/?ordering=-name")
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data[0]["name"], "Bookmark2")
+        self.assertEqual(response.data[1]["name"], "Bookmark1")
+
+    def test_get_bookmarks_ordered_by_url(self):
+        bookmark1 = Bookmark.objects.create(
+            name="Bookmark", url="http://example.com/a/", user=self.user
+        )
+        bookmark2 = Bookmark.objects.create(
+            name="Bookmark", url="http://example.com/b/", user=self.user
+        )
+
+        response = self.client.get("/api/bookmarks/?ordering=url")
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data[0]["id"], bookmark1.id)
+        self.assertEqual(response.data[1]["id"], bookmark2.id)
+
+        response = self.client.get("/api/bookmarks/?ordering=-url")
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data[0]["id"], bookmark2.id)
+        self.assertEqual(response.data[1]["id"], bookmark1.id)
+
+    def test_get_lists_ordered_by_name(self):
+        List.objects.create(name="List1", user=self.user)
+        List.objects.create(name="List2", user=self.user)
+
+        response = self.client.get("/api/lists/?ordering=name")
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data[0]["name"], "List1")
+        self.assertEqual(response.data[1]["name"], "List2")
+
+        response = self.client.get("/api/lists/?ordering=-name")
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data[0]["name"], "List2")
+        self.assertEqual(response.data[1]["name"], "List1")
+
+    def test_get_bookmarks_by_search(self):
+        Bookmark.objects.create(
+            name="Bookmark1", url="http://example.com/a/", user=self.user
+        )
+        Bookmark.objects.create(
+            name="Bookmark2", url="http://example.com/b/", user=self.user
+        )
+
+        response = self.client.get("/api/bookmarks/?search=1")
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["name"], "Bookmark1")
+
+        response = self.client.get("/api/bookmarks/?search=2")
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["name"], "Bookmark2")
+
+        response = self.client.get("/api/bookmarks/?search=%2Fa%2F")
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["name"], "Bookmark1")
+
+        response = self.client.get("/api/bookmarks/?search=%2Fb%2F")
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["name"], "Bookmark2")
 
 
 class DifferentUsersLists(APITestCase):
