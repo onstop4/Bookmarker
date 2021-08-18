@@ -68,6 +68,9 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to, from) => {
+  if (to.name && to.name === from.name) {
+    return;
+  }
   await store.dispatch("setCSRFToken");
   await store.dispatch("updateUserData");
 });
