@@ -37,6 +37,7 @@ const actions = {
       .then((response) => {
         commit("updateBookmarks", { data: response.data, filters: payload });
         commit("setLibraryError", "");
+        return response;
       })
       .catch(() => {
         commit("setLibraryError", "Error fetching data.");
@@ -48,6 +49,7 @@ const actions = {
       .then((response) => {
         commit("updateLists", response.data);
         commit("setLibraryError", "");
+        return response;
       })
       .catch(() => {
         commit("setLibraryError", "Error fetching data.");
@@ -56,6 +58,10 @@ const actions = {
   createBookmark({ commit, rootState }, payload) {
     return axios
       .post("/api/bookmarks/", payload, rootState.auth.axiosConfig)
+      .then(() => {
+        commit("setLibraryError", "");
+        return response;
+      })
       .catch(() => {
         commit("setLibraryError", bookmarkSaveErrorMessage);
       });
@@ -63,6 +69,10 @@ const actions = {
   createList({ commit, rootState }, listName) {
     return axios
       .post("/api/lists/", { name: listName }, rootState.auth.axiosConfig)
+      .then(() => {
+        commit("setLibraryError", "");
+        return response;
+      })
       .catch(() => {
         commit("setLibraryError", listSaveErrorMessage);
       });
@@ -74,6 +84,10 @@ const actions = {
         payload,
         rootState.auth.axiosConfig
       )
+      .then(() => {
+        commit("setLibraryError", "");
+        return response;
+      })
       .catch(() => {
         commit("setLibraryError", bookmarkSaveErrorMessage);
       });
@@ -85,6 +99,10 @@ const actions = {
         { name: payload.name },
         rootState.auth.axiosConfig
       )
+      .then(() => {
+        commit("setLibraryError", "");
+        return response;
+      })
       .catch(() => {
         commit("setLibraryError", listSaveErrorMessage);
       });
@@ -95,6 +113,7 @@ const actions = {
       .then(() => {
         commit("deleteBookmark", bookmarkId);
         commit("setLibraryError", "");
+        return response;
       })
       .catch(() => {
         commit("setLibraryError", "Error deleting bookmark.");
@@ -108,6 +127,10 @@ const actions = {
           (includeRelated ? "include-related/" : ""),
         rootState.auth.axiosConfig
       )
+      .then(() => {
+        commit("setLibraryError", "");
+        return response;
+      })
       .catch(() => {
         commit("setLibraryError", "Error deleting list.");
       });
