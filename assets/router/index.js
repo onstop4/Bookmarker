@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import store from "../store";
 import ConfirmationRequired from "../views/ConfirmationRequired.vue";
 import ConfirmationSuccessful from "../views/ConfirmationSuccessful.vue";
+import EditBookmark from "../views/EditBookmark.vue";
 import Index from "../views/Index.vue";
 import Library from "../views/Library.vue";
 import Login from "../views/Login.vue";
@@ -37,6 +38,13 @@ const routes = [
     name: "library",
     component: Library,
     beforeEnter: requireLogin,
+  },
+  {
+    path: "/app/edit/:id/",
+    name: "editBookmark",
+    component: EditBookmark,
+    beforeEnter: requireLogin,
+    props: true,
   },
   {
     path: "/login/",

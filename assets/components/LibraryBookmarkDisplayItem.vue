@@ -8,21 +8,24 @@
       text-decoration-none
     "
   >
-    <a
-      :href="bookmark.url"
-      :title="bookmark.name"
-      class="flex-grow-1 text-truncate"
-      >{{ bookmark.name }}</a
+    <a :href="bookmark.url" class="flex-grow-1">{{ bookmark.name }}</a>
+    <router-link
+      class="small text-decoration-none px-2 link-primary"
+      :to="{ name: 'editBookmark', params: { id: bookmark.id } }"
+      >Edit</router-link
     >
-    <small @click="edit" class="px-2 link-primary">Edit</small>
-    <small @click="delet" class="px-2 link-primary">Delete</small>
+    <a
+      @click.prevent="delet"
+      class="small text-decoration-none px-2 link-primary"
+      href=""
+      >Delete</a
+    >
   </div>
 </template>
 
 <script>
 export default {
   methods: {
-    edit() {},
     delet() {
       this.$store.dispatch("deleteBookmark", this.bookmark.id);
     },

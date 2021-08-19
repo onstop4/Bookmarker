@@ -1,5 +1,10 @@
 import axios from "axios";
 
+const bookmarkSaveErrorMessage =
+  "Error saving bookmark. Please check the fields and try again.";
+const listSaveErrorMessage =
+  "Error creating new list. Please check the fields and try again.";
+
 const state = {
   bookmarks: [],
   lists: [],
@@ -46,6 +51,24 @@ const actions = {
       })
       .catch(() => {
         commit("setLibraryError", "Error fetching data.");
+      });
+  },
+  createList({ commit, rootState }, listName) {
+    return axios
+      .post("/api/lists/", { name: listName }, rootState.auth.axiosConfig)
+      .catch(() => {
+        commit("setLibraryError", listSaveErrorMessage);
+      });
+  },
+  editBookmark({ commit, rootState }, payload) {
+    return axios
+      .patch(
+        `/api/bookmarks/${payload.id}/`,
+        payload,
+        rootState.auth.axiosConfig
+      )
+      .catch(() => {
+        commit("setLibraryError", bookmarkSaveErrorMessage);
       });
   },
   deleteBookmark({ commit, rootState }, bookmarkId) {
