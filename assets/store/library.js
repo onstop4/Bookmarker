@@ -135,6 +135,19 @@ const actions = {
         commit("setLibraryError", "Error deleting list.");
       });
   },
+  markAsRead({ rootState }, bookmarkId) {
+    return axios
+      .patch(
+        `/api/bookmarks/${bookmarkId}/`,
+        { unread: false },
+        Object.assign({ timeout: 1000 }, rootState.auth.axiosConfig)
+      )
+      .catch(() => {
+        // There is no point displaying an error message since the method that
+        // called markAsRead should still go to the bookmark's url regardless of
+        // any error.
+      });
+  },
 };
 
 const mutations = {

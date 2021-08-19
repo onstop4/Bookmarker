@@ -8,7 +8,9 @@
       text-decoration-none
     "
   >
-    <a :href="bookmark.url" class="flex-grow-1">{{ bookmark.name }}</a>
+    <a @click.prevent="goToLink" :href="bookmark.url" class="flex-grow-1">{{
+      bookmark.name
+    }}</a>
     <router-link
       class="small text-decoration-none px-2 link-primary"
       :to="{ name: 'editBookmark', params: { id: bookmark.id } }"
@@ -26,6 +28,12 @@
 <script>
 export default {
   methods: {
+    async goToLink() {
+      if (this.bookmark.unread) {
+        await this.$store.dispatch("markAsRead", this.bookmark.id);
+      }
+      window.location = this.bookmark.url;
+    },
     delet() {
       this.$store.dispatch("deleteBookmark", this.bookmark.id);
     },
