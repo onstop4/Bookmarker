@@ -15,6 +15,29 @@
       "
     >
       <InputField v-model="searchText" label="Search" />
+      <div
+        v-if="$store.state.library.filters.list"
+        class="d-flex flex-row mx-2"
+      >
+        <router-link
+          :to="{
+            name: 'renameList',
+            params: { listId: this.$store.state.library.filters.list },
+          }"
+          class="btn btn-secondary mx-2"
+          >Rename list</router-link
+        >
+        <Button
+          @click="deleteList"
+          class="btn-danger mx-2"
+          text="Delete list"
+        />
+        <Button
+          @click="deleteList(true)"
+          class="btn-danger mx-2"
+          text="Delete list and contents"
+        />
+      </div>
     </div>
     <div
       v-if="$store.state.library.loading"
@@ -40,6 +63,7 @@
 
 <script>
 import Alert from "./Alert.vue";
+import Button from "./Button.vue";
 import InputField from "./InputField.vue";
 import LibraryBookmarkDisplayItem from "./LibraryBookmarkDisplayItem.vue";
 
@@ -66,6 +90,11 @@ export default {
         this.$router.push({ name: "library", query: params });
       }, searchDelay);
     },
+    deleteList(includeRelated = false) {
+      this.$store.dispatch("deleteList", includeRelated).then(() => {
+        this.$router.push({ name: "library" });
+      });
+    },
   },
   watch: {
     searchText() {
@@ -74,8 +103,10 @@ export default {
   },
   components: {
     Alert,
+    Button,
     InputField,
     LibraryBookmarkDisplayItem,
+    Button,
   },
 };
 </script>

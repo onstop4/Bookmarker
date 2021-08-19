@@ -3,7 +3,7 @@ import axios from "axios";
 const bookmarkSaveErrorMessage =
   "Error saving bookmark. Please check the fields and try again.";
 const listSaveErrorMessage =
-  "Error creating new list. Please check the fields and try again.";
+  "Error saving list. Please check the fields and try again.";
 
 const state = {
   bookmarks: [],
@@ -78,6 +78,17 @@ const actions = {
         commit("setLibraryError", bookmarkSaveErrorMessage);
       });
   },
+  editList({ commit, rootState }, payload) {
+    return axios
+      .patch(
+        `/api/lists/${payload.id}/`,
+        { name: payload.name },
+        rootState.auth.axiosConfig
+      )
+      .catch(() => {
+        commit("setLibraryError", listSaveErrorMessage);
+      });
+  },
   deleteBookmark({ commit, rootState }, bookmarkId) {
     return axios
       .delete(`/api/bookmarks/${bookmarkId}/`, rootState.auth.axiosConfig)
@@ -87,6 +98,18 @@ const actions = {
       })
       .catch(() => {
         commit("setLibraryError", "Error deleting bookmark.");
+      });
+  },
+  deleteList({ commit, state, rootState }, includeRelated) {
+    const currentList = state.filters.list;
+    return axios
+      .delete(
+        `/api/lists/${currentList}/` +
+          (includeRelated ? "include-related/" : ""),
+        rootState.auth.axiosConfig
+      )
+      .catch(() => {
+        commit("setLibraryError", "Error deleting list.");
       });
   },
 };

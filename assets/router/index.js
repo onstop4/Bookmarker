@@ -3,6 +3,7 @@ import store from "../store";
 import ConfirmationRequired from "../views/ConfirmationRequired.vue";
 import ConfirmationSuccessful from "../views/ConfirmationSuccessful.vue";
 import EditBookmark from "../views/EditBookmark.vue";
+import EditList from "../views/EditList.vue";
 import Index from "../views/Index.vue";
 import Library from "../views/Library.vue";
 import Login from "../views/Login.vue";
@@ -56,6 +57,13 @@ const routes = [
     path: "/app/create/",
     name: "createBookmark",
     component: EditBookmark,
+    beforeEnter: requireLogin,
+    props: true,
+  },
+  {
+    path: "/app/rename/:listId/",
+    name: "renameList",
+    component: EditList,
     beforeEnter: requireLogin,
     props: true,
   },
