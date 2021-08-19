@@ -53,6 +53,13 @@ const actions = {
         commit("setLibraryError", "Error fetching data.");
       });
   },
+  createBookmark({ commit, rootState }, payload) {
+    return axios
+      .post("/api/bookmarks/", payload, rootState.auth.axiosConfig)
+      .catch(() => {
+        commit("setLibraryError", bookmarkSaveErrorMessage);
+      });
+  },
   createList({ commit, rootState }, listName) {
     return axios
       .post("/api/lists/", { name: listName }, rootState.auth.axiosConfig)

@@ -4,7 +4,7 @@
       $store.state.library.errorMessage
     }}</Alert>
     <InputField v-model="name" @submit="submit" label="Name" />
-    <InputField v-model="url" @submit="submit" label="Name" />
+    <InputField v-model="url" @submit="submit" label="URL" />
     <div class="form-check">
       <input
         class="form-check-input"
@@ -51,16 +51,44 @@ export default {
       realId: undefined,
       name: "",
       url: "",
-      unread: false,
+      unread: true,
       selectedList: "null",
       newListName: "",
     };
   },
   methods: {
+    setUpCreate() {
+      this.url = this.$route.query.save;
+    },
+    setUpEdit() {
+      this.realId = Number(this.id);
+      // Goes to library if realId is 0 or NaN, which could be the case in a
+      // malformed url parameter.
+      if (!this.realId) {
+        this.$router.push({ name: "library" });
+      }
+      axios
+        .get(
+          `/api/bookmarks/${this.realId}/`,
+          this.$store.state.auth.axiosConfig
+        )
+        .then((response) => {
+          const data = response.data;
+          this.name = data.name;
+          this.url = data.url;
+          this.unread = data.unread;
+          this.selectedList = data.list ? data.list : "null";
+        })
+        .catch(() => {
+          this.$router.push({ name: "library" });
+        });
+      this.$store.dispatch("updateLists");
+    },
     async submit() {
       let listId = this.selectedList;
       let listFound = true;
 
+      // Attempts to create a new list (or uses existing one or null).
       if (listId === "null") {
         listId = null;
       } else if (listId === "new list") {
@@ -74,14 +102,21 @@ export default {
         listId = Number(listId);
       }
 
+      // Only creates bookmark if the previous step (of using an existing list
+      // or creating a new one) didn't fail.
       if (listFound) {
-        const response = await this.$store.dispatch("editBookmark", {
-          id: this.realId,
-          name: this.name,
-          url: this.url,
-          unread: this.unread,
-          list: listId,
-        });
+        const response = await this.$store.dispatch(
+          this.realId ? "editBookmark" : "createBookmark",
+          Object.assign(
+            {
+              name: this.name,
+              url: this.url,
+              unread: this.unread,
+              list: listId,
+            },
+            this.realId ? { id: this.realId } : {}
+          )
+        );
 
         if (response) {
           this.$router.push(
@@ -95,27 +130,12 @@ export default {
     },
   },
   mounted() {
-    this.realId = Number(this.id);
-    // Goes to library if realId is 0 or NaN, which could be the case in a
-    // malformed url parameter.
-    if (!this.realId) {
-      console.log(this.realId);
-      this.$router.push({ name: "library" });
-    }
-    axios
-      .get(`/api/bookmarks/${this.realId}/`, this.$store.state.auth.axiosConfig)
-      .then((response) => {
-        const data = response.data;
-        this.name = data.name;
-        this.url = data.url;
-        this.unread = data.unread;
-        this.selectedList = data.list ? data.list : "null";
-      })
-      .catch(() => {
-        console.log("could not get data");
-        this.$router.push({ name: "library" });
-      });
     this.$store.dispatch("updateLists");
+    if (this.$route.query.save) {
+      this.setUpCreate();
+    } else {
+      this.setUpEdit();
+    }
   },
   components: {
     Alert,
@@ -126,7 +146,7 @@ export default {
   props: {
     id: {
       type: String,
-      required: true,
+      default: "0",
     },
   },
 };

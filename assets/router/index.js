@@ -26,11 +26,17 @@ const routes = [
   {
     path: "/",
     component: Index,
-    beforeEnter: (to, from) => {
+    beforeEnter: () => {
       if (store.state.auth.authenticated) {
         return "/app/";
       }
       return true;
+    },
+  },
+  {
+    path: "/:url(http.*)",
+    redirect: (to) => {
+      return { name: "createBookmark", query: { save: to.params.url } };
     },
   },
   {
@@ -42,6 +48,13 @@ const routes = [
   {
     path: "/app/edit/:id/",
     name: "editBookmark",
+    component: EditBookmark,
+    beforeEnter: requireLogin,
+    props: true,
+  },
+  {
+    path: "/app/create/",
+    name: "createBookmark",
     component: EditBookmark,
     beforeEnter: requireLogin,
     props: true,
