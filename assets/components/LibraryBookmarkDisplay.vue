@@ -14,7 +14,7 @@
         border-bottom
       "
     >
-      <InputField v-model="searchText" label="Search" />
+      <InputField @submit="search(true)" v-model="searchText" label="Search" />
       <div
         v-if="$store.state.library.filters.list"
         class="d-flex flex-row mx-2"
@@ -77,18 +77,25 @@ export default {
     };
   },
   methods: {
-    search() {
+    // This method performs search after 500 milliseconds unless it is
+    // called again, in which the timer will be reset and the search will be
+    // performed after another 500 milliseconds. If skipDelay is true, then the
+    // search will be performed as soon as possible.
+    search(skipDelay = false) {
       clearTimeout(searchTimer);
-      searchTimer = setTimeout(() => {
-        const params = Object.assign(
-          {
-            unread: this.$store.state.library.filters.unread,
-            list: this.$store.state.library.filters.list,
-          },
-          this.searchText ? { search: this.searchText } : {}
-        );
-        this.$router.push({ name: "library", query: params });
-      }, searchDelay);
+      searchTimer = setTimeout(
+        () => {
+          const params = Object.assign(
+            {
+              unread: this.$store.state.library.filters.unread,
+              list: this.$store.state.library.filters.list,
+            },
+            this.searchText ? { search: this.searchText } : {}
+          );
+          this.$router.push({ name: "library", query: params });
+        },
+        skipDelay ? 0 : searchDelay
+      );
     },
     deleteList(includeRelated = false) {
       this.$store.dispatch("deleteList", includeRelated).then(() => {
