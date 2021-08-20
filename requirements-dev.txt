@@ -1,0 +1,4 @@
+-r requirements.txt
+pre-commit==2.14.0
+pylint==2.9.6
+pylint-django==2.4.4
