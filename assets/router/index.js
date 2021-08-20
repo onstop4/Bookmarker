@@ -10,9 +10,14 @@ import Login from "../views/Login.vue";
 import Register from "../views/Register.vue";
 
 function requireLogin(to) {
-  return store.state.auth.authenticated
-    ? true
-    : { path: "login", query: { to: to.path } };
+  // If user is logged in and confirmed, they will be routed correctly.
+  // If user is not confirmed, they will be redirected to the "confirm"
+  // view. If user is not logged in, they will be redirected to the
+  // "login" view.
+  if (store.state.auth.authenticated) {
+    return store.state.auth.userData.is_confirmed ? true : { path: "confirm" };
+  }
+  return { path: "login", query: { to: to.path } };
 }
 
 function handleExistingLogin() {
