@@ -131,7 +131,8 @@ def logout_user_view(request):
 
 
 def send_user_confirmation(request, user):
-    host = request.get_host().split(":")[0]
+    host = request.get_host()
+    host_without_port = host.split(":")[0]
     token = EmailConfirmationToken.objects.get_or_create(
         user=user, defaults={"token": get_random_string(length=100)}
     )[0]
@@ -142,7 +143,7 @@ def send_user_confirmation(request, user):
     send_mail(
         "Email Confirmation",
         message_body,
-        f"noreply@{host}",
+        f"noreply@{host_without_port}",
         [user.email],
         fail_silently=True,
     )
