@@ -14,6 +14,7 @@ const state = {
   userData: {},
   axiosConfig: { headers: { "X-CSRFToken": undefined } },
   errorMessage: "",
+  route: undefined,
 };
 
 const getters = {};
@@ -69,12 +70,20 @@ const mutations = {
   setCSRFToken(state, token) {
     state.axiosConfig.headers["X-CSRFToken"] = token;
   },
-  login() {
-    router.push(
-      router.currentRoute.query
-        ? router.currentRoute.query.to
-        : { name: "library" }
-    );
+  login(state) {
+    if (state.route.query) {
+      if (state.route.query.save) {
+        router.push({
+          name: "createBookmark",
+          query: { save: state.route.query.save },
+        });
+        return;
+      } else if (state.route.query.to) {
+        router.push(state.route.query.to);
+        return;
+      }
+    }
+    router.push({ name: "library" });
   },
   register() {
     router.push({ name: "confirm" });
@@ -97,6 +106,9 @@ const mutations = {
     } catch (e) {
       state.errorMessage = "An unknown error occurred during authentication.";
     }
+  },
+  setRoute(state, route) {
+    state.route = route;
   },
 };
 

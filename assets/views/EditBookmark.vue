@@ -85,6 +85,13 @@ export default {
       this.$store.dispatch("updateLists");
     },
     async submit() {
+      if (
+        !(this.url.startsWith("http://") || this.url.startsWith("https://"))
+      ) {
+        this.$store.commit("useDefaultLibraryError");
+        return;
+      }
+
       let listId = this.selectedList;
       let listFound = true;
 

@@ -1,7 +1,7 @@
 <template>
   <Centered class="text-center">
-    <h2>Your email has been confirmed.</h2>
-    <h3>Please login to continue.</h3>
+    <h2>Your email address has been confirmed.</h2>
+    <h3>Please click the button below to login.</h3>
     <router-link class="btn btn-primary btn-lg" :to="{ name: 'login' }"
       >Login</router-link
     >

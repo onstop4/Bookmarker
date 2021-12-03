@@ -1,8 +1,8 @@
 <template>
   <Centered class="text-center">
-    <h2>Email confirmation required.</h2>
+    <h2>Email address confirmation required.</h2>
     <h3>Please check your email.</h3>
-    <Button @click="resendEmail" text="Resent confirmation email" />
+    <Button @click="resendEmail" text="Resend confirmation email" />
   </Centered>
 </template>
 

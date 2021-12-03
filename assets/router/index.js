@@ -15,9 +15,15 @@ function requireLogin(to) {
   // view. If user is not logged in, they will be redirected to the
   // "login" view.
   if (store.state.auth.authenticated) {
-    return store.state.auth.userData.is_confirmed ? true : { path: "confirm" };
+    return store.state.auth.userData.is_confirmed ? true : { name: "confirm" };
   }
-  return { path: "login", query: { to: to.path } };
+  return {
+    name: "login",
+    query: Object.assign(
+      { to: to.path },
+      to.query.save ? { save: to.query.save } : {}
+    ),
+  };
 }
 
 function handleExistingLogin() {
@@ -102,6 +108,7 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to, from) => {
+  store.commit("setRoute", to);
   if (to.name && to.name === from.name) {
     return;
   }

@@ -58,7 +58,7 @@ const actions = {
   createBookmark({ commit, rootState }, payload) {
     return axios
       .post("/api/bookmarks/", payload, rootState.auth.axiosConfig)
-      .then(() => {
+      .then((response) => {
         commit("setLibraryError", "");
         return response;
       })
@@ -69,7 +69,7 @@ const actions = {
   createList({ commit, rootState }, listName) {
     return axios
       .post("/api/lists/", { name: listName }, rootState.auth.axiosConfig)
-      .then(() => {
+      .then((response) => {
         commit("setLibraryError", "");
         return response;
       })
@@ -84,7 +84,7 @@ const actions = {
         payload,
         rootState.auth.axiosConfig
       )
-      .then(() => {
+      .then((response) => {
         commit("setLibraryError", "");
         return response;
       })
@@ -99,7 +99,7 @@ const actions = {
         { name: payload.name },
         rootState.auth.axiosConfig
       )
-      .then(() => {
+      .then((response) => {
         commit("setLibraryError", "");
         return response;
       })
@@ -110,7 +110,7 @@ const actions = {
   deleteBookmark({ commit, rootState }, bookmarkId) {
     return axios
       .delete(`/api/bookmarks/${bookmarkId}/`, rootState.auth.axiosConfig)
-      .then(() => {
+      .then((response) => {
         commit("deleteBookmark", bookmarkId);
         commit("setLibraryError", "");
         return response;
@@ -119,7 +119,7 @@ const actions = {
         commit("setLibraryError", "Error deleting bookmark.");
       });
   },
-  deleteList({ commit, state, rootState }, includeRelated) {
+  deleteList({ commit, state, rootState, dispatch }, includeRelated) {
     const currentList = state.filters.list;
     return axios
       .delete(
@@ -127,12 +127,14 @@ const actions = {
           (includeRelated ? "include-related/" : ""),
         rootState.auth.axiosConfig
       )
-      .then(() => {
+      .then((response) => {
         commit("setLibraryError", "");
+        commit("deleteList", currentList);
         return response;
       })
-      .catch(() => {
+      .catch((e) => {
         commit("setLibraryError", "Error deleting list.");
+        throw e;
       });
   },
   markAsRead({ rootState }, bookmarkId) {
@@ -164,8 +166,17 @@ const mutations = {
       1
     );
   },
+  deleteList(state, listId) {
+    state.lists.splice(
+      state.lists.findIndex((i) => i.id === listId),
+      1
+    );
+  },
   setLibraryError(state, errorMessage) {
     state.errorMessage = errorMessage;
+  },
+  useDefaultLibraryError(state) {
+    state.errorMessage = bookmarkSaveErrorMessage;
   },
   setLoading(state, loading) {
     state.loading = loading;
