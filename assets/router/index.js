@@ -37,6 +37,7 @@ function handleExistingLogin() {
 const routes = [
   {
     path: "/",
+    name: "index",
     component: Index,
     beforeEnter: () => {
       if (store.state.auth.authenticated) {

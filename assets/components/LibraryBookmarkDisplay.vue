@@ -1,5 +1,8 @@
 <template>
   <div class="d-flex flex-column align-items-stretch flex-grow-1 bg-white p-3">
+    <div class="d-md-flex justify-content-end">
+      <Button @click="logout" class="btn-danger" text="Logout" />
+    </div>
     <Alert v-if="$store.state.library.errorMessage" class="alert-danger">{{
       $store.state.library.errorMessage
     }}</Alert>
@@ -101,6 +104,9 @@ export default {
       this.$store.dispatch("deleteList", includeRelated).then(() => {
         this.$router.push({ name: "library" });
       });
+    },
+    logout() {
+      this.$store.dispatch("logout");
     },
   },
   watch: {

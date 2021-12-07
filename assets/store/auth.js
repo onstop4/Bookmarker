@@ -61,6 +61,13 @@ const actions = {
         commit("authError", err);
       });
   },
+  logout({ commit }) {
+    return axios
+      .post("/api/logout/", createURLParams({}), state.axiosConfig)
+      .then(() => {
+        commit("logout");
+      });
+  },
 };
 
 const mutations = {
@@ -109,6 +116,9 @@ const mutations = {
   },
   setRoute(state, route) {
     state.route = route;
+  },
+  logout() {
+    router.push({ name: "index" });
   },
 };
 

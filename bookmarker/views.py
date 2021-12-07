@@ -136,10 +136,13 @@ def send_user_confirmation(request, user):
     token = EmailConfirmationToken.objects.get_or_create(
         user=user, defaults={"token": get_random_string(length=100)}
     )[0]
-    message_body = (
-        f"Please go to this address to confirm your email:\nhttp://{host}"
+    link = (
+        "http://"
+        + host
         + reverse("confirm-user", kwargs={"user_id": user.id, "token_str": token})
     )
+
+    message_body = f"Please go to this address to confirm your email:\n{link}"
     send_mail(
         "Email Confirmation",
         message_body,
