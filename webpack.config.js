@@ -8,7 +8,7 @@ module.exports = {
     main: "./assets/main.js",
   },
   output: {
-    path: path.resolve(__dirname, "bookmarker/static/bookmarker"),
+    path: path.resolve(__dirname, "static/bookmarker"),
     publicPath: "/static/",
     filename: "[name].js",
     chunkFilename: "[id]-[chunkhash].js",

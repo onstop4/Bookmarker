@@ -27,8 +27,7 @@ SECRET_KEY = config("DJANGO_SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", cast=bool, default=False)
 
-ALLOWED_HOSTS = [] if DEBUG else "*"
-
+ALLOWED_HOSTS = [] if DEBUG else [config("ALLOWED_HOST")]
 
 # Application definition
 
@@ -126,6 +125,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
+STATICFILES_DIRS = [BASE_DIR / "static"]
+
 STATIC_URL = "/static/"
 
 STATIC_ROOT = BASE_DIR / "static_collected"
@@ -138,6 +139,12 @@ STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesSto
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "bookmarker.User"
+
+EMAIL_BACKEND = (
+    "django.core.mail.backends.console.EmailBackend"
+    if DEBUG
+    else "django.core.mail.backends.smtp.EmailBackend"
+)
 
 EMAIL_HOST = config("EMAIL_HOST", default="localhost")
 

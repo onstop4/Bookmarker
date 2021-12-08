@@ -1,0 +1,33 @@
+version: "3.7"
+
+services:
+  db:
+    image: postgres
+    environment:
+      - POSTGRES_USER=${DB_USER:-bookmarker}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:?DB_PASSWORD not set correctly}
+      - POSTGRES_DB=${DB_NAME:-bookmarker}
+    volumes:
+      - db-volume:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    restart: always
+  web:
+    image: onstop4/bookmarker
+    command: python manage.py runserver 0.0.0.0:8000
+    environment:
+      - DEBUG=True
+      - DJANGO_SECRET_KEY="${DJANGO_SECRET_KEY:?DJANGO_SECRET_KEY not set correctly}"
+      - ALLOWED_HOSTNAME=web
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=${DB_USER:-bookmarker}
+      - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD not set correctly}
+      - DB_NAME=${DB_NAME:-bookmarker}
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+volumes:
+  db-volume:
